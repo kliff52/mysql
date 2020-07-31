@@ -137,5 +137,61 @@ where (target_user_id = 1 or target_user_id = 1) and status = 'approved';
 -- 											2.
 -- ѕусть задан некоторый пользователь. 
 -- »з всех друзей этого пользовател€ найдите человека, который больше всех общалс€ с нашим пользователем.
-select initiator_user_id, target_user_id from friend_requests 
-where (initiator_user_id = 1 or target_user_id = 1) and status = 'approved';
+-- 2) id друзей которые друзь€ пользовател€
+select initiator_user_id from friend_requests where target_user_id = 1 and status = 'approved'
+union
+select target_user_id from friend_requests where initiator_user_id = 1 and status = 'approved';
+ -- 3)  оличество сообщений с пользователем. 
+ select
+ from_user_id ,
+ to_user_id 
+from 
+	messages 
+where 
+	from_user_id in (select initiator_user_id from friend_requests where target_user_id = 1 and status = 'approved'
+							union
+					select target_user_id from friend_requests where initiator_user_id = 1 and status = 'approved')
+	or
+	to_user_id in (select initiator_user_id from friend_requests where target_user_id = 1 and status = 'approved'
+							union
+					select target_user_id from friend_requests where initiator_user_id = 1 and status = 'approved');
+
+--   												3
+-- ѕодсчитать общее количество лайков, которые получили 10 самых молодых пользователей.
+-- преоброзовали возраст в года и отсортеровали 10 самых молодых  
+-- 10 самых молодых
+select user_id, round(DATEDIFF(CURRENT_DATE, birthday )/365) AS ageInYears
+FROM profiles order by ageInYears limit 10; 
+-- »д 10 самых молодых 
+select user_id from profiles
+where user_id in (select  round(DATEDIFF(CURRENT_DATE, birthday )/365) AS ageInYears
+FROM profiles order by ageInYears limit 10)
+-- ѕолучить количество лайков по пользовател€м с ид
+
+-- получаем количество лайков пользовател€ 1
+select count(media_id), media_id from likes 
+where media_id in (select id from media where user_id = 1) group by media_id;
+-- ѕолучить количества лайков 10 самых молодых
+select count(media_id),
+	media_id 
+from 
+	likes 
+where
+	media_id in 
+		(select id from media where user_id = (select user_id, round(DATEDIFF(CURRENT_DATE, birthday )/365) AS ageInYears
+		from
+			profiles 
+		order by
+			ageInYears
+		limit
+			10)
+		group by
+			media_id)
+;
+
+-- 													4
+-- ќпределить кто больше поставил лайков (всего) - мужчины или женщины?
+
+-- 													5
+-- Ќайти 10 пользователей, которые про€вл€ют наименьшую активность в использовании социальной сети.
+
